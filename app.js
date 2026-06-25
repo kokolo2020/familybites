@@ -50,6 +50,19 @@ const profilePhotoStorageKey = 'familyBites.profilePhotos';
 const localMealsStorageKey = 'familyBites.meals';
 const localChatStorageKey = 'familyBites.chat';
 
+const avatarOptions = [
+  { seed: 'dad', color: 'd1d4f9' },
+  { seed: 'mom', color: 'ffd5dc' },
+  { seed: 'emily', color: 'ffe7a3' },
+  { seed: 'james', color: 'd8f0c8' },
+  { seed: 'sophia', color: 'e9daf6' },
+  { seed: 'chef', color: 'ffdfbf' },
+  { seed: 'smile', color: 'd6f5ec' },
+  { seed: 'sunny', color: 'fff0a8' },
+  { seed: 'noodle', color: 'f6d6ff' },
+  { seed: 'bento', color: 'cfe8ff' }
+];
+
 const navItems = [
   { page: 'dashboard', icon: '🏠', label: 'Dashboard' },
   { page: 'snap', icon: '📷', label: 'Snap Food' },
@@ -82,6 +95,11 @@ function bindEvents() {
 
     if (actionTarget) {
       handleAction(actionTarget.dataset.action);
+    }
+
+    const avatarTarget = event.target.closest('[data-avatar-url]');
+    if (avatarTarget) {
+      chooseProfileAvatar(avatarTarget.dataset.avatarUrl);
     }
   });
 
@@ -332,6 +350,7 @@ function renderProfile() {
   document.getElementById('profileAvatarLarge').innerHTML = avatarMarkup(member);
   document.getElementById('profileNameLarge').textContent = member.name;
   document.getElementById('profileRoleLarge').textContent = member.role || 'Family member';
+  renderAvatarPicker(member);
 }
 
 async function saveMeal(event) {
@@ -494,6 +513,30 @@ async function handleProfilePhotoChange(event) {
   }
 }
 
+function chooseProfileAvatar(photoUrl) {
+  const member = appState.currentMember;
+  if (!member || !photoUrl) return;
+  member.photo = photoUrl;
+  const matchingMember = appState.members.find((item) => item.id === member.id);
+  if (matchingMember) matchingMember.photo = photoUrl;
+  saveProfilePhoto(member.id, photoUrl);
+  renderProfiles();
+  updateProfileUi();
+  renderProfile();
+}
+
+function renderAvatarPicker(member) {
+  const picker = document.getElementById('avatarPicker');
+  picker.innerHTML = avatarOptions.map((option) => {
+    const photoUrl = avatarOptionUrl(option);
+    return `
+      <button class="${member.photo === photoUrl ? 'active' : ''}" type="button" data-avatar-url="${escapeAttr(photoUrl)}" aria-label="Choose ${escapeAttr(option.seed)} avatar">
+        <img src="${escapeAttr(photoUrl)}" alt="">
+      </button>
+    `;
+  }).join('');
+}
+
 function getMemberMeals() {
   const member = appState.currentMember;
   if (!member) return [];
@@ -530,7 +573,11 @@ function defaultProfilePhoto(member) {
     sophia: 'e9daf6',
     grandma: 'e9daf6'
   };
-  return `https://api.dicebear.com/9.x/adventurer/svg?seed=${encodeURIComponent(seed)}&backgroundColor=${colors[seed] || 'fff0d3'}`;
+  return avatarOptionUrl({ seed, color: colors[seed] || 'fff0d3' });
+}
+
+function avatarOptionUrl(option) {
+  return `https://api.dicebear.com/9.x/adventurer/svg?seed=${encodeURIComponent(option.seed)}&backgroundColor=${option.color}`;
 }
 
 function applyStoredProfilePhotos() {

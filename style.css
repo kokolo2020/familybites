@@ -1207,6 +1207,45 @@ h1 span {
   justify-items: start;
 }
 
+.avatar-picker-wrap {
+  display: grid;
+  gap: 10px;
+  width: min(520px, 100%);
+  margin: 4px 0;
+}
+
+.avatar-picker-wrap strong {
+  color: #6f4a24;
+  font-size: 13px;
+  text-transform: uppercase;
+}
+
+.avatar-picker {
+  display: grid;
+  grid-template-columns: repeat(5, 48px);
+  gap: 10px;
+}
+
+.avatar-picker button {
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border-radius: 50%;
+  background: #fff8ef;
+  box-shadow: inset 0 0 0 1px rgba(128, 92, 53, 0.14), var(--soft-shadow);
+  overflow: hidden;
+}
+
+.avatar-picker button.active {
+  box-shadow: inset 0 0 0 3px #e58a12, 0 12px 26px rgba(217, 94, 49, 0.18);
+}
+
+.avatar-picker img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 .profile-photo-control {
   position: relative;
   display: inline-grid;
@@ -1459,6 +1498,17 @@ h1 span {
   .meal-card strong,
   .timeline-item strong {
     grid-column: 2;
+  }
+
+  .avatar-picker {
+    display: flex;
+    max-width: calc(100vw - 84px);
+    overflow-x: auto;
+    padding-bottom: 8px;
+  }
+
+  .avatar-picker button {
+    flex: 0 0 48px;
   }
 
   .mobile-nav {
