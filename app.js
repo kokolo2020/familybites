@@ -3,11 +3,11 @@ const appState = {
   currentMember: null,
   currentPage: 'dashboard',
   members: [
-    { id: 'dad', name: 'Dad', avatar: '👨', role: 'Family Admin', photo: 'https://api.dicebear.com/9.x/adventurer/svg?seed=dad&backgroundColor=d1d4f9' },
-    { id: 'mom', name: 'Mom', avatar: '👩', role: 'Meal Planner', photo: 'https://api.dicebear.com/9.x/adventurer/svg?seed=mom&backgroundColor=ffd5dc' },
-    { id: 'daughter', name: 'Emily', avatar: '👧', role: 'Snack Curator', photo: 'https://api.dicebear.com/9.x/adventurer/svg?seed=emily&backgroundColor=ffe7a3' },
-    { id: 'son', name: 'James', avatar: '👦', role: 'Food Explorer', photo: 'https://api.dicebear.com/9.x/adventurer/svg?seed=james&backgroundColor=d8f0c8' },
-    { id: 'grandma', name: 'Sophia', avatar: '👵', role: 'Family Chef', photo: 'https://api.dicebear.com/9.x/adventurer/svg?seed=sophia&backgroundColor=e9daf6' },
+    { id: 'dad', name: 'Dad', avatar: '👨', role: 'Family Admin', photo: 'assets/avatars/dad.jpg' },
+    { id: 'mom', name: 'Mom', avatar: '👩', role: 'Meal Planner', photo: 'assets/avatars/mom.jpg' },
+    { id: 'daughter', name: 'Emily', avatar: '👧', role: 'Snack Curator', photo: 'assets/avatars/emily.jpg' },
+    { id: 'son', name: 'James', avatar: '👦', role: 'Food Explorer', photo: 'assets/avatars/james.jpg' },
+    { id: 'grandma', name: 'Sophia', avatar: '👵', role: 'Family Chef', photo: 'assets/avatars/sophia.jpg' },
     { id: 'add', name: 'Add Member', avatar: '＋', role: 'Invite family' }
   ],
   meals: [
@@ -57,16 +57,12 @@ const chefCartStorageKey = 'familyBites.chefCart';
 const chefVoiceStorageKey = 'familyBites.chefVoiceNotes';
 
 const avatarOptions = [
-  { seed: 'dad', color: 'd1d4f9' },
-  { seed: 'mom', color: 'ffd5dc' },
-  { seed: 'emily', color: 'ffe7a3' },
-  { seed: 'james', color: 'd8f0c8' },
-  { seed: 'sophia', color: 'e9daf6' },
-  { seed: 'chef', color: 'ffdfbf' },
-  { seed: 'smile', color: 'd6f5ec' },
-  { seed: 'sunny', color: 'fff0a8' },
-  { seed: 'noodle', color: 'f6d6ff' },
-  { seed: 'bento', color: 'cfe8ff' }
+  { id: 'dad', label: 'Dad', url: 'assets/avatars/dad.jpg' },
+  { id: 'mom', label: 'Mom', url: 'assets/avatars/mom.jpg' },
+  { id: 'emily', label: 'Emily', url: 'assets/avatars/emily.jpg' },
+  { id: 'james', label: 'James', url: 'assets/avatars/james.jpg' },
+  { id: 'sophia', label: 'Sophia', url: 'assets/avatars/sophia.jpg' },
+  { id: 'chef', label: 'Chef', url: 'assets/avatars/chef.jpg' }
 ];
 
 const menuItems = [
@@ -736,9 +732,9 @@ function chooseProfileAvatar(photoUrl) {
 function renderAvatarPicker(member) {
   const picker = document.getElementById('avatarPicker');
   picker.innerHTML = avatarOptions.map((option) => {
-    const photoUrl = avatarOptionUrl(option);
+    const photoUrl = option.url;
     return `
-      <button class="${member.photo === photoUrl ? 'active' : ''}" type="button" data-avatar-url="${escapeAttr(photoUrl)}" aria-label="Choose ${escapeAttr(option.seed)} avatar">
+      <button class="${member.photo === photoUrl ? 'active' : ''}" type="button" data-avatar-url="${escapeAttr(photoUrl)}" aria-label="Choose ${escapeAttr(option.label)} avatar">
         <img src="${escapeAttr(photoUrl)}" alt="">
       </button>
     `;
@@ -770,34 +766,39 @@ function avatarMarkup(member) {
 }
 
 function defaultProfilePhoto(member) {
-  const seed = String(member.name || member.id || 'family').toLowerCase().replace(/[^a-z0-9]+/g, '-');
-  const colors = {
-    dad: 'd1d4f9',
-    mom: 'ffd5dc',
-    emily: 'ffe7a3',
-    daughter: 'ffe7a3',
-    james: 'd8f0c8',
-    son: 'd8f0c8',
-    sophia: 'e9daf6',
-    grandma: 'e9daf6'
+  if (member.id === 'add' || member.name === 'Add Member') return '';
+  const map = {
+    dad: 'assets/avatars/dad.jpg',
+    mom: 'assets/avatars/mom.jpg',
+    daughter: 'assets/avatars/emily.jpg',
+    emily: 'assets/avatars/emily.jpg',
+    son: 'assets/avatars/james.jpg',
+    james: 'assets/avatars/james.jpg',
+    grandma: 'assets/avatars/sophia.jpg',
+    sophia: 'assets/avatars/sophia.jpg',
+    chef: 'assets/avatars/chef.jpg'
   };
-  return avatarOptionUrl({ seed, color: colors[seed] || 'fff0d3' });
-}
-
-function avatarOptionUrl(option) {
-  return `https://api.dicebear.com/9.x/adventurer/svg?seed=${encodeURIComponent(option.seed)}&backgroundColor=${option.color}`;
+  const idKey = String(member.id || '').toLowerCase();
+  const nameKey = String(member.name || '').toLowerCase();
+  return map[idKey] || map[nameKey] || 'assets/avatars/dad.jpg';
 }
 
 function applyStoredProfilePhotos() {
   const storedPhotos = getStoredProfilePhotos();
   appState.members = appState.members.map((member) => ({
     ...member,
-    photo: storedPhotos[member.id] || member.photo || defaultProfilePhoto(member)
+    photo: savedOrDefaultProfilePhoto(member, storedPhotos[member.id])
   }));
   if (appState.currentMember) {
     const updatedMember = appState.members.find((member) => member.id === appState.currentMember.id);
     if (updatedMember) appState.currentMember = updatedMember;
   }
+}
+
+function savedOrDefaultProfilePhoto(member, savedPhoto) {
+  if (savedPhoto && !savedPhoto.includes('dicebear.com')) return savedPhoto;
+  if (member.photo && !member.photo.includes('dicebear.com')) return member.photo;
+  return defaultProfilePhoto(member);
 }
 
 function applyStoredAppData() {
