@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FamilyBites | Every Meal. Every Memory. One Family.</title>
+  <meta name="description" content="A private family food hub for meal memories, favorite restaurants, weekly nutrition recaps, family chat, and AI food scanning." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="app-shell">
+    <section class="hero" id="landing">
+      <div class="hero-bg"></div>
+      <nav class="topbar">
+        <div class="brand"><span>🍽️</span> FamilyBites</div>
+        <button class="ghost-btn" onclick="showPanel('chat')">Family Chat</button>
+      </nav>
+
+      <div class="hero-content">
+        <p class="eyebrow">Private Family Food OS</p>
+        <h1>Every Meal.<br>Every Memory.<br>One Family.</h1>
+        <p class="hero-text">Choose your profile, save meals, remember favorite restaurants, chat with family, and get weekly nutrition insights.</p>
+
+        <div class="profile-section">
+          <h2>Who's eating today?</h2>
+          <div class="profiles" id="profiles"></div>
+        </div>
+      </div>
+
+      <div class="feature-strip">
+        <button onclick="quickEnter('scan')">📷 Snap Food</button>
+        <button onclick="quickEnter('favorites')">❤️ Favorites</button>
+        <button onclick="quickEnter('weekly')">📊 Weekly Report</button>
+        <button onclick="quickEnter('chat')">💬 Chat</button>
+      </div>
+    </section>
+
+    <section class="dashboard hidden" id="dashboard">
+      <aside class="sidebar">
+        <div class="brand small"><span>🍽️</span> FamilyBites</div>
+        <button onclick="backHome()">🏠 Profiles</button>
+        <button onclick="showPanel('home')">👤 Home</button>
+        <button onclick="showPanel('scan')">📷 Snap Food</button>
+        <button onclick="showPanel('favorites')">❤️ Favorites</button>
+        <button onclick="showPanel('weekly')">📊 Weekly Report</button>
+        <button onclick="showPanel('chat')">💬 Family Chat</button>
+      </aside>
+
+      <div class="main-panel">
+        <div class="member-header">
+          <div>
+            <p class="eyebrow">Personal Dashboard</p>
+            <h2 id="greeting">Good afternoon</h2>
+          </div>
+          <div class="member-badge" id="memberBadge">👨</div>
+        </div>
+
+        <div id="panel-home" class="panel active-panel">
+          <div class="stats-grid">
+            <article class="stat-card primary">
+              <p>Today's Calories</p>
+              <h3>1,680 / 2,200</h3>
+              <div class="progress"><span style="width:76%"></span></div>
+            </article>
+            <article class="stat-card"><p>Meals Logged</p><h3>3</h3><small>Breakfast, lunch, snack</small></article>
+            <article class="stat-card"><p>This Week</p><h3>12,860</h3><small>Total estimated calories</small></article>
+          </div>
+
+          <div class="quick-actions">
+            <button onclick="showPanel('scan')">📷 Add Food</button>
+            <button onclick="showPanel('favorites')">🍜 Order Again</button>
+            <button onclick="showPanel('weekly')">📈 View Report</button>
+            <button onclick="showPanel('chat')">💬 Family Chat</button>
+          </div>
+
+          <h3 class="section-title">Recent Meals</h3>
+          <div class="meal-grid" id="recentMeals">
+            <article><span>🍳</span><b>Breakfast</b><p>Eggs, toast, fruit</p></article>
+            <article><span>🍛</span><b>Lunch</b><p>Chicken rice at local shop</p></article>
+            <article><span>🍣</span><b>Snack</b><p>Salmon sushi</p></article>
+          </div>
+        </div>
+
+        <div id="panel-scan" class="panel">
+          <h3>Snap Food</h3>
+          <p class="muted">AI photo scanning comes next. For now, save food details manually.</p>
+          <form class="food-form" onsubmit="saveMeal(event)">
+            <input id="foodName" placeholder="Food name, e.g. Chicken Rice" required>
+            <input id="restaurantName" placeholder="Restaurant / shop name">
+            <input id="locationName" placeholder="Location">
+            <input id="price" type="number" placeholder="Price">
+            <input id="calories" type="number" placeholder="Estimated calories">
+            <textarea id="notes" placeholder="Notes"></textarea>
+            <button class="main-btn" type="submit">Save Meal</button>
+          </form>
+          <div id="savedMeal" class="saved-card hidden"></div>
+        </div>
+
+        <div id="panel-favorites" class="panel">
+          <h3>Favorite Restaurants</h3>
+          <div class="restaurant-grid">
+            <article><span>🍜</span><b>MK</b><p>Hotpot, family dinner</p><small>Call: 02-000-0000</small></article>
+            <article><span>🍕</span><b>Pizza Company</b><p>Easy Friday order</p><small>Call: 1112</small></article>
+            <article><span>🥘</span><b>Grandma Kitchen</b><p>Home-style meals</p><small>Call: add number</small></article>
+          </div>
+        </div>
+
+        <div id="panel-weekly" class="panel">
+          <h3>Weekly AI Recap</h3>
+          <div class="report-card">
+            <div><p>Total meals</p><h4>42</h4></div>
+            <div><p>Total calories</p><h4>12,860</h4></div>
+            <div><p>Restaurants</p><h4>6</h4></div>
+          </div>
+          <div class="ai-note">
+            <b>AI Coach Note</b>
+            <p>This week has good protein, but vegetables and fruit look low. Try adding one green vegetable dish at lunch and one fruit snack each day. Red meat appeared several times, so consider fish or chicken for balance.</p>
+          </div>
+        </div>
+
+        <div id="panel-chat" class="panel">
+          <h3>Family Chat</h3>
+          <div class="chat-box" id="chatBox">
+            <p><b>Mom:</b> Who is home for dinner?</p>
+            <p><b>Dad:</b> I can order noodles.</p>
+            <p><b>Emma:</b> Can we get sushi?</p>
+          </div>
+          <div class="chat-input">
+            <input id="chatText" placeholder="Type a family message">
+            <button onclick="sendChat()">Send</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
