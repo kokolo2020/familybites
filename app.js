@@ -47,6 +47,8 @@ const appState = {
 };
 
 const profilePhotoStorageKey = 'familyBites.profilePhotos';
+const localMealsStorageKey = 'familyBites.meals';
+const localChatStorageKey = 'familyBites.chat';
 
 const navItems = [
   { page: 'dashboard', icon: '🏠', label: 'Dashboard' },
@@ -61,6 +63,7 @@ const navItems = [
 const mobileItems = navItems.filter((item) => ['dashboard', 'snap', 'favorites', 'weekly', 'chat'].includes(item.page));
 
 document.addEventListener('DOMContentLoaded', () => {
+  applyStoredAppData();
   applyStoredProfilePhotos();
   renderProfiles();
   renderNavigation();
@@ -112,12 +115,14 @@ async function hydrateFromSupabase() {
       appState.members = [...members.map(normalizeMember), appState.members.find((member) => member.id === 'add')];
       applyStoredProfilePhotos();
     }
-    if (meals.length) appState.meals = meals.map(normalizeMeal);
+    if (meals.length) appState.meals = mergeRecords(meals.map(normalizeMeal), appState.meals);
     if (favorites.length) appState.favorites = favorites;
-    if (chat.length) appState.chat = chat.map(normalizeChat);
+    if (chat.length) appState.chat = mergeRecords(chat.map(normalizeChat), appState.chat);
   } catch (error) {
     console.warn('Supabase unavailable, using local demo data.', error);
   }
+
+  saveStoredAppData();
 
   renderProfiles();
   selectMember(appState.members[0], { openDashboard: false });
@@ -351,6 +356,7 @@ async function saveMeal(event) {
   if (!meal.food_name) return;
 
   appState.meals.unshift(meal);
+  saveStoredAppData();
   form.reset();
   resetPhotoPreview();
   showPage('dashboard');
@@ -359,6 +365,7 @@ async function saveMeal(event) {
     try {
       const savedMeal = await window.familyBitesDb.saveMeal(meal);
       appState.meals = appState.meals.map((item) => item.id === meal.id ? normalizeMeal(savedMeal) : item);
+      saveStoredAppData();
       renderAll();
     } catch (error) {
       console.warn('Meal saved locally but Supabase write failed.', error);
@@ -382,6 +389,7 @@ async function sendChat(event) {
   };
 
   appState.chat.push(message);
+  saveStoredAppData();
   input.value = '';
   renderChat();
 
@@ -389,6 +397,7 @@ async function sendChat(event) {
     try {
       const savedMessage = await window.familyBitesDb.sendChat(message);
       appState.chat = appState.chat.map((item) => item.id === message.id ? normalizeChat(savedMessage) : item);
+      saveStoredAppData();
       renderChat();
     } catch (error) {
       console.warn('Chat saved locally but Supabase write failed.', error);
@@ -412,7 +421,7 @@ function updateMealPreview() {
   if (photoUrl) previewPhoto.src = photoUrl;
 }
 
-function handlePhotoChange(event) {
+async function handlePhotoChange(event) {
   const file = event.target.files?.[0];
   if (!file) {
     resetPhotoPreview();
@@ -426,9 +435,8 @@ function handlePhotoChange(event) {
     return;
   }
 
-  const reader = new FileReader();
-  reader.addEventListener('load', () => {
-    const photoUrl = String(reader.result || '');
+  try {
+    const photoUrl = await resizeImageFile(file, 900, 0.82);
     const photoPreview = document.getElementById('photoPreview');
     photoPreview.src = photoUrl;
     photoPreview.dataset.photoUrl = photoUrl;
@@ -437,8 +445,12 @@ function handlePhotoChange(event) {
     document.getElementById('photoTitle').textContent = 'Photo ready';
     document.getElementById('photoHint').textContent = 'Tap again to replace it.';
     updateMealPreview();
-  });
-  reader.readAsDataURL(file);
+  } catch (error) {
+    console.warn('Could not load food photo.', error);
+    alert('Could not load that food photo. Please try another image.');
+    event.target.value = '';
+    resetPhotoPreview();
+  }
 }
 
 function resetPhotoPreview() {
@@ -533,13 +545,30 @@ function applyStoredProfilePhotos() {
   }
 }
 
+function applyStoredAppData() {
+  const storedMeals = getStoredJson(localMealsStorageKey, []).map(normalizeMeal);
+  const storedChat = getStoredJson(localChatStorageKey, []).map(normalizeChat);
+  if (storedMeals.length) appState.meals = mergeRecords(storedMeals, appState.meals);
+  if (storedChat.length) appState.chat = mergeRecords(storedChat, appState.chat);
+}
+
+function saveStoredAppData() {
+  setStoredJson(localMealsStorageKey, appState.meals);
+  setStoredJson(localChatStorageKey, appState.chat);
+}
+
+function mergeRecords(primary, fallback) {
+  const seen = new Set();
+  return [...primary, ...fallback].filter((item) => {
+    const key = item.id || `${item.member_id || item.member_name || 'family'}-${item.food_name || item.message || ''}-${item.eaten_at || item.created_at || ''}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
 function getStoredProfilePhotos() {
-  try {
-    return JSON.parse(localStorage.getItem(profilePhotoStorageKey) || '{}');
-  } catch (error) {
-    console.warn('Could not read saved profile photos.', error);
-    return {};
-  }
+  return getStoredJson(profilePhotoStorageKey, {});
 }
 
 function saveProfilePhoto(memberId, photoUrl) {
@@ -550,6 +579,24 @@ function saveProfilePhoto(memberId, photoUrl) {
   } catch (error) {
     console.warn('Could not save profile photo locally.', error);
     alert('Profile photo updated for this session, but the browser could not save it permanently.');
+  }
+}
+
+function getStoredJson(key, fallback) {
+  try {
+    return JSON.parse(localStorage.getItem(key) || JSON.stringify(fallback));
+  } catch (error) {
+    console.warn(`Could not read ${key}.`, error);
+    return fallback;
+  }
+}
+
+function setStoredJson(key, value) {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch (error) {
+    console.warn(`Could not save ${key}.`, error);
+    alert('Saved for this session, but this browser could not store all data permanently. Try using a smaller photo.');
   }
 }
 
