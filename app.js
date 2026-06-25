@@ -189,7 +189,6 @@ function renderProfiles() {
     <button class="profile-card" type="button" data-member-id="${escapeAttr(member.id)}">
       <span class="avatar">${avatarMarkup(member)}</span>
       <strong>${escapeHtml(member.name)}</strong>
-      <small>${escapeHtml(member.role || 'Family member')}</small>
     </button>
   `).join('');
 
@@ -559,7 +558,6 @@ function renderProfile() {
   const member = appState.currentMember || appState.members[0];
   document.getElementById('profileAvatarLarge').innerHTML = avatarMarkup(member);
   document.getElementById('profileNameLarge').textContent = member.name;
-  document.getElementById('profileRoleLarge').textContent = member.role || 'Family member';
   renderAvatarPicker(member);
 }
 
