@@ -222,10 +222,43 @@
           <div class="section-title">
             <div>
               <p class="eyebrow">Order Food</p>
-              <h3>Repeat the meals everyone actually likes</h3>
+              <h3>Choose food and send it to Chef</h3>
             </div>
           </div>
-          <div id="orderGrid" class="restaurant-grid"></div>
+          <div id="orderGrid" class="order-menu-grid"></div>
+          <div class="voice-order-panel">
+            <div>
+              <p class="eyebrow">Voice Chat</p>
+              <h3>Send a voice note to Chef</h3>
+              <p>Record allergies, timing, or special requests.</p>
+            </div>
+            <button id="voiceRecordButton" class="primary-button" type="button">Record Voice</button>
+          </div>
+        </section>
+
+        <section id="page-chef" class="page" data-title="Chef Interface" data-kicker="Kitchen inbox">
+          <div class="chef-header-panel">
+            <div>
+              <p class="eyebrow">Chef View</p>
+              <h3>Incoming food orders</h3>
+              <p>Only the foods sent to Chef and family voice notes appear here.</p>
+            </div>
+            <button class="secondary-button" data-page="order" type="button">Back to Order</button>
+          </div>
+          <div class="chef-layout">
+            <section>
+              <div class="section-title">
+                <h3>Foods to prepare</h3>
+              </div>
+              <div id="chefOrderList" class="chef-order-list"></div>
+            </section>
+            <section>
+              <div class="section-title">
+                <h3>Voice notes</h3>
+              </div>
+              <div id="chefVoiceList" class="chef-voice-list"></div>
+            </section>
+          </div>
         </section>
 
         <section id="page-favorites" class="page" data-title="Favorite Restaurants" data-kicker="Family approved">

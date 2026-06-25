@@ -1095,6 +1095,125 @@ h1 span {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+.order-menu-grid,
+.chef-layout {
+  display: grid;
+  gap: 14px;
+}
+
+.order-menu-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.order-menu-card,
+.chef-header-panel,
+.chef-order-card,
+.chef-voice-card,
+.voice-order-panel {
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: 8px;
+  background: rgba(255, 252, 246, 0.82);
+  box-shadow: var(--soft-shadow);
+  backdrop-filter: blur(18px);
+}
+
+.order-menu-card {
+  display: grid;
+  gap: 12px;
+  padding: 18px;
+}
+
+.order-menu-card > span {
+  display: grid;
+  place-items: center;
+  width: 58px;
+  height: 58px;
+  border-radius: 8px;
+  background: #fff0d3;
+  font-size: 30px;
+}
+
+.order-menu-card h4,
+.chef-order-card h4,
+.chef-voice-card h4,
+.voice-order-panel h3,
+.chef-header-panel h3 {
+  margin: 0 0 5px;
+}
+
+.order-menu-card p,
+.chef-order-card p,
+.chef-header-panel p,
+.voice-order-panel p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.order-menu-card button,
+.chef-order-card button {
+  min-height: 42px;
+  border-radius: 999px;
+  color: white;
+  background: var(--olive);
+  font-weight: 900;
+}
+
+.voice-order-panel,
+.chef-header-panel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-top: 16px;
+  padding: 18px;
+}
+
+.chef-layout {
+  grid-template-columns: minmax(0, 1.25fr) minmax(320px, 0.85fr);
+  margin-top: 16px;
+}
+
+.chef-order-list,
+.chef-voice-list {
+  display: grid;
+  gap: 12px;
+}
+
+.chef-order-card {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 14px;
+  align-items: center;
+  padding: 16px;
+}
+
+.chef-order-card > span {
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  border-radius: 8px;
+  background: #fff0d3;
+  font-size: 28px;
+}
+
+.chef-order-card small,
+.chef-voice-card small {
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.chef-voice-card {
+  display: grid;
+  gap: 10px;
+  padding: 16px;
+}
+
+.chef-voice-card audio {
+  width: 100%;
+}
+
 .restaurant-card {
   grid-template-columns: auto 1fr;
   align-items: start;
@@ -1327,6 +1446,8 @@ h1 span {
   .section-row,
   .split-layout,
   .form-layout,
+  .order-menu-grid,
+  .chef-layout,
   .restaurant-grid,
   .report-grid {
     grid-template-columns: 1fr;
@@ -1443,6 +1564,20 @@ h1 span {
 
   .landing-actions button {
     grid-template-columns: auto 1fr auto;
+  }
+
+  .voice-order-panel,
+  .chef-header-panel {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .chef-order-card {
+    grid-template-columns: auto 1fr;
+  }
+
+  .chef-order-card button {
+    grid-column: 1 / -1;
   }
 
   .workspace-view {
