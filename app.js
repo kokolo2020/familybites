@@ -81,6 +81,7 @@ function bindEvents() {
 
   document.getElementById('mealForm').addEventListener('submit', saveMeal);
   document.getElementById('chatForm').addEventListener('submit', sendChat);
+  document.getElementById('mealPhoto').addEventListener('change', handlePhotoChange);
 
   ['foodName', 'restaurantName', 'calories'].forEach((id) => {
     document.getElementById(id).addEventListener('input', updateMealPreview);
@@ -255,8 +256,9 @@ function renderMeals() {
 
 function mealTemplate(meal) {
   return `
-    <article class="meal-card">
+    <article class="meal-card ${meal.photo_url ? 'has-photo' : ''}">
       <span class="meal-emoji">${mealEmoji(meal.food_name)}</span>
+      ${meal.photo_url ? `<img class="meal-photo" src="${escapeAttr(meal.photo_url)}" alt="${escapeAttr(meal.food_name)}">` : ''}
       <div>
         <h4>${escapeHtml(meal.food_name)}</h4>
         <p>${escapeHtml(meal.restaurant_name || 'Family meal')} · ${escapeHtml(meal.notes || 'Saved to FamilyBites')}</p>
@@ -326,6 +328,7 @@ async function saveMeal(event) {
   event.preventDefault();
   const form = event.currentTarget;
   const formData = new FormData(form);
+  const photoUrl = document.getElementById('photoPreview').dataset.photoUrl || '';
   const meal = {
     id: crypto.randomUUID ? crypto.randomUUID() : `meal-${Date.now()}`,
     family_id: appState.familyId,
@@ -336,6 +339,7 @@ async function saveMeal(event) {
     price: numberOrNull(formData.get('price')),
     calories: numberOrNull(formData.get('calories')),
     notes: formData.get('notes').trim(),
+    photo_url: photoUrl,
     eaten_at: new Date().toISOString()
   };
 
@@ -343,6 +347,7 @@ async function saveMeal(event) {
 
   appState.meals.unshift(meal);
   form.reset();
+  resetPhotoPreview();
   showPage('dashboard');
 
   if (window.familyBitesDb?.isConfigured) {
@@ -390,11 +395,58 @@ function updateMealPreview() {
   const food = document.getElementById('foodName').value.trim();
   const restaurant = document.getElementById('restaurantName').value.trim();
   const calories = document.getElementById('calories').value.trim();
+  const photoUrl = document.getElementById('photoPreview').dataset.photoUrl || '';
+  const previewPhoto = document.getElementById('previewPhoto');
   document.getElementById('previewFood').textContent = food || 'New family bite';
   document.getElementById('previewMeta').textContent = [
     restaurant || 'Restaurant not set',
     calories ? `${calories} calories` : 'Calories pending'
   ].join(' · ');
+
+  previewPhoto.classList.toggle('hidden', !photoUrl);
+  if (photoUrl) previewPhoto.src = photoUrl;
+}
+
+function handlePhotoChange(event) {
+  const file = event.target.files?.[0];
+  if (!file) {
+    resetPhotoPreview();
+    return;
+  }
+
+  if (!file.type.startsWith('image/')) {
+    alert('Please choose an image file.');
+    event.target.value = '';
+    resetPhotoPreview();
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.addEventListener('load', () => {
+    const photoUrl = String(reader.result || '');
+    const photoPreview = document.getElementById('photoPreview');
+    photoPreview.src = photoUrl;
+    photoPreview.dataset.photoUrl = photoUrl;
+    photoPreview.classList.remove('hidden');
+    document.getElementById('photoIcon').classList.add('hidden');
+    document.getElementById('photoTitle').textContent = 'Photo ready';
+    document.getElementById('photoHint').textContent = 'Tap again to replace it.';
+    updateMealPreview();
+  });
+  reader.readAsDataURL(file);
+}
+
+function resetPhotoPreview() {
+  const photoPreview = document.getElementById('photoPreview');
+  const previewPhoto = document.getElementById('previewPhoto');
+  photoPreview.removeAttribute('src');
+  photoPreview.dataset.photoUrl = '';
+  photoPreview.classList.add('hidden');
+  previewPhoto.removeAttribute('src');
+  previewPhoto.classList.add('hidden');
+  document.getElementById('photoIcon').classList.remove('hidden');
+  document.getElementById('photoTitle').textContent = 'Tap to snap or upload food';
+  document.getElementById('photoHint').textContent = 'Your photo will appear in the meal preview.';
 }
 
 function getMemberMeals() {
@@ -419,6 +471,7 @@ function normalizeMeal(meal) {
   return {
     ...meal,
     food_name: meal.food_name || meal.name || 'Meal',
+    photo_url: meal.photo_url || '',
     eaten_at: meal.eaten_at || meal.created_at || new Date().toISOString()
   };
 }

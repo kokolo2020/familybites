@@ -194,11 +194,13 @@
         <section id="page-snap" class="page" data-title="Snap Food" data-kicker="Food journal">
           <div class="form-layout">
             <form id="mealForm" class="glass-form">
-              <div class="photo-drop">
-                <span>📷</span>
-                <strong>Photo upload placeholder</strong>
-                <small>Later AI will detect food automatically.</small>
-              </div>
+              <label class="photo-drop" for="mealPhoto">
+                <input id="mealPhoto" name="photo" type="file" accept="image/*" capture="environment">
+                <img id="photoPreview" class="photo-preview hidden" alt="Selected food preview">
+                <span id="photoIcon">📷</span>
+                <strong id="photoTitle">Tap to snap or upload food</strong>
+                <small id="photoHint">Your photo will appear in the meal preview.</small>
+              </label>
               <label>Food Name<input id="foodName" name="food_name" required placeholder="Chicken rice"></label>
               <label>Restaurant<input id="restaurantName" name="restaurant_name" placeholder="Favorite local spot"></label>
               <label>Location<input id="locationName" name="location_name" placeholder="Bangkok, home, school"></label>
@@ -209,6 +211,7 @@
             </form>
             <aside class="preview-card">
               <p class="eyebrow">Live Preview</p>
+              <img id="previewPhoto" class="preview-photo hidden" alt="Food preview">
               <h3 id="previewFood">New family bite</h3>
               <p id="previewMeta">Fill the form to preview the saved meal.</p>
             </aside>

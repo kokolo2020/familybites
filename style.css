@@ -964,6 +964,7 @@ h1 span {
 .photo-drop {
   grid-column: 1 / -1;
   min-height: 160px;
+  position: relative;
   display: grid;
   place-items: center;
   align-content: center;
@@ -971,10 +972,76 @@ h1 span {
   border: 1px dashed #ddc7af;
   background: linear-gradient(135deg, #fff8ef, #eef5e3);
   text-align: center;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.photo-drop input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
 }
 
 .photo-drop span {
   font-size: 38px;
+}
+
+.photo-preview,
+.preview-photo,
+.meal-photo {
+  width: 100%;
+  object-fit: cover;
+}
+
+.photo-preview {
+  position: absolute;
+  inset: 0;
+  height: 100%;
+}
+
+.photo-preview + span,
+.photo-preview ~ strong,
+.photo-preview ~ small {
+  position: relative;
+  z-index: 1;
+}
+
+.photo-drop:has(.photo-preview:not(.hidden))::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(29, 19, 12, 0.04), rgba(29, 19, 12, 0.54));
+}
+
+.photo-drop:has(.photo-preview:not(.hidden)) strong,
+.photo-drop:has(.photo-preview:not(.hidden)) small {
+  color: white;
+  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.38);
+}
+
+.preview-photo {
+  height: 170px;
+  margin-bottom: 14px;
+  border-radius: 8px;
+  box-shadow: var(--soft-shadow);
+}
+
+.meal-card.has-photo {
+  grid-template-columns: 86px 1fr auto;
+}
+
+.meal-card.has-photo .meal-emoji {
+  display: none;
+}
+
+.meal-photo {
+  width: 86px;
+  height: 70px;
+  border-radius: 8px;
+  box-shadow: var(--soft-shadow);
 }
 
 .photo-drop small,

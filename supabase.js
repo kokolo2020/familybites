@@ -69,6 +69,7 @@
         price: meal.price,
         calories: meal.calories,
         notes: meal.notes || null,
+        photo_url: meal.photo_url || null,
         eaten_at: meal.eaten_at
       };
       const { data, error } = await client
