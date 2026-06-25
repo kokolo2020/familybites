@@ -46,6 +46,8 @@ const appState = {
   ]
 };
 
+const profilePhotoStorageKey = 'familyBites.profilePhotos';
+
 const navItems = [
   { page: 'dashboard', icon: '🏠', label: 'Dashboard' },
   { page: 'snap', icon: '📷', label: 'Snap Food' },
@@ -59,6 +61,7 @@ const navItems = [
 const mobileItems = navItems.filter((item) => ['dashboard', 'snap', 'favorites', 'weekly', 'chat'].includes(item.page));
 
 document.addEventListener('DOMContentLoaded', () => {
+  applyStoredProfilePhotos();
   renderProfiles();
   renderNavigation();
   bindEvents();
@@ -82,6 +85,7 @@ function bindEvents() {
   document.getElementById('mealForm').addEventListener('submit', saveMeal);
   document.getElementById('chatForm').addEventListener('submit', sendChat);
   document.getElementById('mealPhoto').addEventListener('change', handlePhotoChange);
+  document.getElementById('profilePhotoInput').addEventListener('change', handleProfilePhotoChange);
 
   ['foodName', 'restaurantName', 'calories'].forEach((id) => {
     document.getElementById(id).addEventListener('input', updateMealPreview);
@@ -106,6 +110,7 @@ async function hydrateFromSupabase() {
 
     if (members.length) {
       appState.members = [...members.map(normalizeMember), appState.members.find((member) => member.id === 'add')];
+      applyStoredProfilePhotos();
     }
     if (meals.length) appState.meals = meals.map(normalizeMeal);
     if (favorites.length) appState.favorites = favorites;
@@ -122,7 +127,7 @@ function renderProfiles() {
   const profileGrid = document.getElementById('profileGrid');
   profileGrid.innerHTML = appState.members.map((member) => `
     <button class="profile-card" type="button" data-member-id="${escapeAttr(member.id)}">
-      <span class="avatar">${member.photo ? `<img src="${escapeAttr(member.photo)}" alt="">` : member.avatar}</span>
+      <span class="avatar">${avatarMarkup(member)}</span>
       <strong>${escapeHtml(member.name)}</strong>
       <small>${escapeHtml(member.role || 'Family member')}</small>
     </button>
@@ -212,9 +217,9 @@ function renderAll() {
 
 function updateProfileUi() {
   const member = appState.currentMember;
-  document.getElementById('navAvatar').textContent = member.avatar;
+  document.getElementById('navAvatar').innerHTML = avatarMarkup(member);
   document.getElementById('navName').textContent = member.name;
-  document.getElementById('activeAvatar').textContent = `${member.avatar} ${member.name}`;
+  document.getElementById('activeAvatar').innerHTML = `${avatarMarkup(member)} <span>${escapeHtml(member.name)}</span>`;
   document.getElementById('dashboardGreeting').textContent = `${getGreeting()}, ${member.name}`;
 }
 
@@ -319,7 +324,7 @@ function renderChat() {
 
 function renderProfile() {
   const member = appState.currentMember || appState.members[0];
-  document.getElementById('profileAvatarLarge').textContent = member.avatar;
+  document.getElementById('profileAvatarLarge').innerHTML = avatarMarkup(member);
   document.getElementById('profileNameLarge').textContent = member.name;
   document.getElementById('profileRoleLarge').textContent = member.role || 'Family member';
 }
@@ -449,6 +454,34 @@ function resetPhotoPreview() {
   document.getElementById('photoHint').textContent = 'Your photo will appear in the meal preview.';
 }
 
+async function handleProfilePhotoChange(event) {
+  const file = event.target.files?.[0];
+  const member = appState.currentMember;
+  if (!file || !member) return;
+
+  if (!file.type.startsWith('image/')) {
+    alert('Please choose an image file.');
+    event.target.value = '';
+    return;
+  }
+
+  try {
+    const photoUrl = await resizeImageFile(file, 640, 0.84);
+    member.photo = photoUrl;
+    const matchingMember = appState.members.find((item) => item.id === member.id);
+    if (matchingMember) matchingMember.photo = photoUrl;
+    saveProfilePhoto(member.id, photoUrl);
+    renderProfiles();
+    updateProfileUi();
+    renderProfile();
+    event.target.value = '';
+  } catch (error) {
+    console.warn('Could not read profile photo.', error);
+    alert('Could not load that profile photo. Please try another image.');
+    event.target.value = '';
+  }
+}
+
 function getMemberMeals() {
   const member = appState.currentMember;
   if (!member) return [];
@@ -462,9 +495,86 @@ function normalizeMember(member) {
     id: member.id,
     name: member.name,
     avatar: member.avatar || '👤',
-    photo: member.photo || '',
+    photo: member.photo || defaultProfilePhoto(member),
     role: member.role || 'Family member'
   };
+}
+
+function avatarMarkup(member) {
+  return member?.photo
+    ? `<img src="${escapeAttr(member.photo)}" alt="">`
+    : escapeHtml(member?.avatar || '👤');
+}
+
+function defaultProfilePhoto(member) {
+  const seed = String(member.name || member.id || 'family').toLowerCase().replace(/[^a-z0-9]+/g, '-');
+  const colors = {
+    dad: 'd1d4f9',
+    mom: 'ffd5dc',
+    emily: 'ffe7a3',
+    daughter: 'ffe7a3',
+    james: 'd8f0c8',
+    son: 'd8f0c8',
+    sophia: 'e9daf6',
+    grandma: 'e9daf6'
+  };
+  return `https://api.dicebear.com/9.x/adventurer/svg?seed=${encodeURIComponent(seed)}&backgroundColor=${colors[seed] || 'fff0d3'}`;
+}
+
+function applyStoredProfilePhotos() {
+  const storedPhotos = getStoredProfilePhotos();
+  appState.members = appState.members.map((member) => ({
+    ...member,
+    photo: storedPhotos[member.id] || member.photo || defaultProfilePhoto(member)
+  }));
+  if (appState.currentMember) {
+    const updatedMember = appState.members.find((member) => member.id === appState.currentMember.id);
+    if (updatedMember) appState.currentMember = updatedMember;
+  }
+}
+
+function getStoredProfilePhotos() {
+  try {
+    return JSON.parse(localStorage.getItem(profilePhotoStorageKey) || '{}');
+  } catch (error) {
+    console.warn('Could not read saved profile photos.', error);
+    return {};
+  }
+}
+
+function saveProfilePhoto(memberId, photoUrl) {
+  try {
+    const storedPhotos = getStoredProfilePhotos();
+    storedPhotos[memberId] = photoUrl;
+    localStorage.setItem(profilePhotoStorageKey, JSON.stringify(storedPhotos));
+  } catch (error) {
+    console.warn('Could not save profile photo locally.', error);
+    alert('Profile photo updated for this session, but the browser could not save it permanently.');
+  }
+}
+
+function resizeImageFile(file, maxSize, quality) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.addEventListener('error', () => reject(reader.error));
+    reader.addEventListener('load', () => {
+      const image = new Image();
+      image.addEventListener('error', () => reject(new Error('Image could not be loaded.')));
+      image.addEventListener('load', () => {
+        const scale = Math.min(maxSize / image.width, maxSize / image.height, 1);
+        const width = Math.max(1, Math.round(image.width * scale));
+        const height = Math.max(1, Math.round(image.height * scale));
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const context = canvas.getContext('2d');
+        context.drawImage(image, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      });
+      image.src = String(reader.result || '');
+    });
+    reader.readAsDataURL(file);
+  });
 }
 
 function normalizeMeal(meal) {
