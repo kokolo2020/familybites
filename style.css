@@ -1095,10 +1095,16 @@ h1 span {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+.chef-menu-layout,
 .order-menu-grid,
 .chef-layout {
   display: grid;
   gap: 14px;
+}
+
+.chef-menu-layout {
+  grid-template-columns: minmax(0, 1fr) 320px;
+  align-items: start;
 }
 
 .order-menu-grid {
@@ -1109,6 +1115,7 @@ h1 span {
 .chef-header-panel,
 .chef-order-card,
 .chef-voice-card,
+.chef-cart,
 .voice-order-panel {
   border: 1px solid rgba(255, 255, 255, 0.7);
   border-radius: 8px;
@@ -1119,18 +1126,17 @@ h1 span {
 
 .order-menu-card {
   display: grid;
+  grid-template-rows: 150px auto auto;
   gap: 12px;
-  padding: 18px;
+  padding: 12px;
+  overflow: hidden;
 }
 
-.order-menu-card > span {
-  display: grid;
-  place-items: center;
-  width: 58px;
-  height: 58px;
+.order-menu-card > img {
+  width: 100%;
+  height: 150px;
   border-radius: 8px;
-  background: #fff0d3;
-  font-size: 30px;
+  object-fit: cover;
 }
 
 .order-menu-card h4,
@@ -1151,12 +1157,67 @@ h1 span {
 }
 
 .order-menu-card button,
-.chef-order-card button {
+.chef-order-card button,
+.cart-item button {
   min-height: 42px;
   border-radius: 999px;
   color: white;
   background: var(--olive);
   font-weight: 900;
+}
+
+.chef-cart {
+  position: sticky;
+  top: 24px;
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+}
+
+.chef-cart h3 {
+  margin: 0;
+}
+
+.cart-list {
+  display: grid;
+  gap: 10px;
+}
+
+.cart-item {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 10px;
+  align-items: center;
+  padding: 10px;
+  border-radius: 8px;
+  background: rgba(255, 240, 211, 0.72);
+}
+
+.cart-item span {
+  font-size: 24px;
+}
+
+.cart-item strong,
+.cart-item small {
+  display: block;
+}
+
+.cart-item small {
+  color: var(--muted);
+}
+
+.cart-item button {
+  width: 32px;
+  min-height: 32px;
+  padding: 0;
+  background: #d95e31;
+  font-size: 20px;
+}
+
+.chef-cart .primary-button:disabled {
+  opacity: 0.52;
+  cursor: not-allowed;
+  transform: none;
 }
 
 .voice-order-panel,
@@ -1196,6 +1257,22 @@ h1 span {
   border-radius: 8px;
   background: #fff0d3;
   font-size: 28px;
+}
+
+.chef-order-card.has-photo {
+  grid-template-columns: 86px 1fr auto;
+}
+
+.chef-order-card.has-photo > span {
+  display: none;
+}
+
+.chef-order-card > img {
+  width: 86px;
+  height: 70px;
+  border-radius: 8px;
+  object-fit: cover;
+  box-shadow: var(--soft-shadow);
 }
 
 .chef-order-card small,
@@ -1446,6 +1523,7 @@ h1 span {
   .section-row,
   .split-layout,
   .form-layout,
+  .chef-menu-layout,
   .order-menu-grid,
   .chef-layout,
   .restaurant-grid,
@@ -1576,8 +1654,16 @@ h1 span {
     grid-template-columns: auto 1fr;
   }
 
+  .chef-order-card.has-photo {
+    grid-template-columns: 78px 1fr;
+  }
+
   .chef-order-card button {
     grid-column: 1 / -1;
+  }
+
+  .chef-cart {
+    position: static;
   }
 
   .workspace-view {

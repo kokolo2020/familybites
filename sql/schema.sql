@@ -54,9 +54,11 @@ create table if not exists chef_orders (
   id uuid primary key default gen_random_uuid(),
   family_id uuid references families(id) on delete cascade,
   member_id uuid references members(id) on delete set null,
+  batch_id text,
   food_name text not null,
   detail text,
   emoji text default '🍽️',
+  photo text,
   status text default 'sent',
   created_at timestamptz default now()
 );

@@ -45,6 +45,7 @@ const appState = {
     { id: 'chat-3', member_id: 'daughter', member_name: 'Daughter', message: 'Sushi please.', created_at: new Date(Date.now() - 600000).toISOString() }
   ],
   chefOrders: [],
+  cart: [],
   voiceNotes: []
 };
 
@@ -52,6 +53,7 @@ const profilePhotoStorageKey = 'familyBites.profilePhotos';
 const localMealsStorageKey = 'familyBites.meals';
 const localChatStorageKey = 'familyBites.chat';
 const chefOrdersStorageKey = 'familyBites.chefOrders';
+const chefCartStorageKey = 'familyBites.chefCart';
 const chefVoiceStorageKey = 'familyBites.chefVoiceNotes';
 
 const avatarOptions = [
@@ -68,12 +70,12 @@ const avatarOptions = [
 ];
 
 const menuItems = [
-  { id: 'lemon-chicken', name: 'Lemon Garlic Chicken', detail: 'Roasted veggies, family portion', emoji: '🍗' },
-  { id: 'salmon-rice', name: 'Salmon Rice Bowl', detail: 'Protein bowl with greens', emoji: '🍣' },
-  { id: 'spaghetti', name: 'Spaghetti Bolognese', detail: 'Classic red sauce pasta', emoji: '🍝' },
-  { id: 'tacos', name: 'Tacos Night', detail: 'Chicken, salsa, and salad', emoji: '🌮' },
-  { id: 'pizza', name: 'Homemade Pizza', detail: 'Cheese, tomato, basil', emoji: '🍕' },
-  { id: 'brunch', name: 'Family Brunch', detail: 'Pancakes, fruit, and eggs', emoji: '🥞' }
+  { id: 'lemon-chicken', name: 'Lemon Garlic Chicken', detail: 'Roasted veggies, family portion', emoji: '🍗', photo: 'https://images.unsplash.com/photo-1532550907401-a500c9a57435?auto=format&fit=crop&w=700&q=82' },
+  { id: 'salmon-rice', name: 'Salmon Rice Bowl', detail: 'Protein bowl with greens', emoji: '🍣', photo: 'https://images.unsplash.com/photo-1467003909585-2f8a72700288?auto=format&fit=crop&w=700&q=82' },
+  { id: 'spaghetti', name: 'Spaghetti Bolognese', detail: 'Classic red sauce pasta', emoji: '🍝', photo: 'https://images.unsplash.com/photo-1551892374-ecf8754cf8b0?auto=format&fit=crop&w=700&q=82' },
+  { id: 'tacos', name: 'Tacos Night', detail: 'Chicken, salsa, and salad', emoji: '🌮', photo: 'https://images.unsplash.com/photo-1565299585323-38d6b0865b47?auto=format&fit=crop&w=700&q=82' },
+  { id: 'pizza', name: 'Homemade Pizza', detail: 'Cheese, tomato, basil', emoji: '🍕', photo: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=700&q=82' },
+  { id: 'brunch', name: 'Family Brunch', detail: 'Pancakes, fruit, and eggs', emoji: '🥞', photo: 'https://images.unsplash.com/photo-1528207776546-365bb710ee93?auto=format&fit=crop&w=700&q=82' }
 ];
 
 let voiceRecorder = null;
@@ -81,16 +83,17 @@ let voiceChunks = [];
 
 const navItems = [
   { page: 'dashboard', icon: '🏠', label: 'Dashboard' },
+  { page: 'order', icon: '🧑‍🍳', label: 'Chef Menu' },
   { page: 'snap', icon: '📷', label: 'Snap Food' },
   { page: 'favorites', icon: '❤️', label: 'Favorites' },
   { page: 'weekly', icon: '📊', label: 'Weekly Report' },
   { page: 'chat', icon: '💬', label: 'Family Chat' },
-  { page: 'chef', icon: '🧑‍🍳', label: 'Chef' },
+  { page: 'chef', icon: '📥', label: 'Chef Screen' },
   { page: 'timeline', icon: '📅', label: 'Timeline' },
   { page: 'profile', icon: '👤', label: 'Profile' }
 ];
 
-const mobileItems = navItems.filter((item) => ['dashboard', 'snap', 'favorites', 'weekly', 'chat'].includes(item.page));
+const mobileItems = navItems.filter((item) => ['dashboard', 'order', 'snap', 'chef', 'chat'].includes(item.page));
 
 document.addEventListener('DOMContentLoaded', () => {
   applyStoredAppData();
@@ -119,9 +122,14 @@ function bindEvents() {
       chooseProfileAvatar(avatarTarget.dataset.avatarUrl);
     }
 
-    const orderTarget = event.target.closest('[data-send-order]');
+    const orderTarget = event.target.closest('[data-add-cart]');
     if (orderTarget) {
-      sendOrderToChef(orderTarget.dataset.sendOrder);
+      addToCart(orderTarget.dataset.addCart);
+    }
+
+    const cartRemoveTarget = event.target.closest('[data-remove-cart]');
+    if (cartRemoveTarget) {
+      removeFromCart(cartRemoveTarget.dataset.removeCart);
     }
 
     const completeTarget = event.target.closest('[data-complete-order]');
@@ -135,6 +143,7 @@ function bindEvents() {
   document.getElementById('mealPhoto').addEventListener('change', handlePhotoChange);
   document.getElementById('profilePhotoInput').addEventListener('change', handleProfilePhotoChange);
   document.getElementById('voiceRecordButton').addEventListener('click', toggleVoiceRecording);
+  document.getElementById('sendCartButton').addEventListener('click', sendCartToChef);
 
   ['foodName', 'restaurantName', 'calories'].forEach((id) => {
     document.getElementById(id).addEventListener('input', updateMealPreview);
@@ -261,6 +270,7 @@ function renderAll() {
   renderMeals();
   renderFavorites();
   renderOrderMenu();
+  renderCart();
   renderChefInterface();
   renderReport();
   renderChat();
@@ -345,21 +355,44 @@ function renderFavorites() {
 function renderOrderMenu() {
   document.getElementById('orderGrid').innerHTML = menuItems.map((item) => `
     <article class="order-menu-card">
-      <span>${item.emoji}</span>
+      <img src="${escapeAttr(item.photo)}" alt="${escapeAttr(item.name)}">
       <div>
         <h4>${escapeHtml(item.name)}</h4>
         <p>${escapeHtml(item.detail)}</p>
       </div>
-      <button type="button" data-send-order="${escapeAttr(item.id)}">Send to Chef</button>
+      <button type="button" data-add-cart="${escapeAttr(item.id)}">Order</button>
     </article>
   `).join('');
+}
+
+function renderCart() {
+  const cartList = document.getElementById('cartList');
+  const sendButton = document.getElementById('sendCartButton');
+  if (!cartList || !sendButton) return;
+
+  cartList.innerHTML = appState.cart.map((item) => `
+    <article class="cart-item">
+      <span>${escapeHtml(item.emoji || '🍽️')}</span>
+      <div>
+        <strong>${escapeHtml(item.name)}</strong>
+        <small>${escapeHtml(item.member_name || 'Family')}</small>
+      </div>
+      <button type="button" data-remove-cart="${escapeAttr(item.cart_id)}" aria-label="Remove ${escapeAttr(item.name)}">×</button>
+    </article>
+  `).join('') || '<p class="muted">No foods in cart yet.</p>';
+
+  sendButton.disabled = appState.cart.length === 0;
+  sendButton.textContent = appState.cart.length
+    ? `Done · Send ${appState.cart.length} to Chef`
+    : 'Done · Send to Chef';
 }
 
 function renderChefInterface() {
   const activeOrders = appState.chefOrders.filter((order) => order.status !== 'done');
   document.getElementById('chefOrderList').innerHTML = activeOrders.map((order) => `
-    <article class="chef-order-card">
+    <article class="chef-order-card ${order.photo ? 'has-photo' : ''}">
       <span>${escapeHtml(order.emoji || '🍽️')}</span>
+      ${order.photo ? `<img src="${escapeAttr(order.photo)}" alt="${escapeAttr(order.food_name)}">` : ''}
       <div>
         <h4>${escapeHtml(order.food_name)}</h4>
         <p>${escapeHtml(order.detail || 'Family order')}</p>
@@ -380,22 +413,54 @@ function renderChefInterface() {
   `).join('') || emptyChefState('No voice notes yet.');
 }
 
-function sendOrderToChef(menuItemId) {
+function addToCart(menuItemId) {
   const item = menuItems.find((entry) => entry.id === menuItemId);
   const member = appState.currentMember || appState.members[0];
   if (!item) return;
 
-  appState.chefOrders.unshift({
-    id: crypto.randomUUID ? crypto.randomUUID() : `order-${Date.now()}`,
+  appState.cart.push({
+    cart_id: crypto.randomUUID ? crypto.randomUUID() : `cart-${Date.now()}`,
+    menu_item_id: item.id,
+    name: item.name,
+    detail: item.detail,
+    emoji: item.emoji,
+    photo: item.photo,
+    member_id: member.id,
+    member_name: member.name,
+    added_at: new Date().toISOString()
+  });
+  saveStoredAppData();
+  renderCart();
+}
+
+function removeFromCart(cartId) {
+  appState.cart = appState.cart.filter((item) => item.cart_id !== cartId);
+  saveStoredAppData();
+  renderCart();
+}
+
+function sendCartToChef() {
+  if (!appState.cart.length) return;
+
+  const now = new Date().toISOString();
+  const batchId = crypto.randomUUID ? crypto.randomUUID() : `batch-${Date.now()}`;
+  const orders = appState.cart.map((item) => ({
+    id: crypto.randomUUID ? crypto.randomUUID() : `order-${Date.now()}-${item.menu_item_id}`,
+    batch_id: batchId,
     food_name: item.name,
     detail: item.detail,
     emoji: item.emoji,
-    member_id: member.id,
-    member_name: member.name,
+    photo: item.photo,
+    member_id: item.member_id,
+    member_name: item.member_name,
     status: 'sent',
-    created_at: new Date().toISOString()
-  });
+    created_at: now
+  }));
+
+  appState.chefOrders = [...orders, ...appState.chefOrders];
+  appState.cart = [];
   saveStoredAppData();
+  renderCart();
   renderChefInterface();
   showPage('chef');
 }
@@ -741,10 +806,12 @@ function applyStoredAppData() {
   const storedMeals = getStoredJson(localMealsStorageKey, []).map(normalizeMeal);
   const storedChat = getStoredJson(localChatStorageKey, []).map(normalizeChat);
   const storedOrders = getStoredJson(chefOrdersStorageKey, []);
+  const storedCart = getStoredJson(chefCartStorageKey, []);
   const storedVoiceNotes = getStoredJson(chefVoiceStorageKey, []);
   if (storedMeals.length) appState.meals = mergeRecords(storedMeals, appState.meals);
   if (storedChat.length) appState.chat = mergeRecords(storedChat, appState.chat);
   if (storedOrders.length) appState.chefOrders = storedOrders;
+  if (storedCart.length) appState.cart = storedCart;
   if (storedVoiceNotes.length) appState.voiceNotes = storedVoiceNotes;
 }
 
@@ -752,6 +819,7 @@ function saveStoredAppData() {
   setStoredJson(localMealsStorageKey, appState.meals);
   setStoredJson(localChatStorageKey, appState.chat);
   setStoredJson(chefOrdersStorageKey, appState.chefOrders);
+  setStoredJson(chefCartStorageKey, appState.cart);
   setStoredJson(chefVoiceStorageKey, appState.voiceNotes);
 }
 

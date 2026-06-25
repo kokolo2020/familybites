@@ -23,9 +23,7 @@
         </button>
         <nav class="landing-menu" aria-label="Preview navigation">
           <button class="active" type="button"><span>⌂</span>Home</button>
-          <button type="button"><span>▣</span>Meal Plan</button>
-          <button type="button"><span>♨</span>Recipes</button>
-          <button type="button"><span>▱</span>Grocery List</button>
+          <button type="button"><span>🧑‍🍳</span>Chef Menu</button>
           <button type="button"><span>▥</span>Weekly Recap</button>
           <button type="button"><span>☏</span>Family Chat</button>
           <button type="button"><span>⚙</span>Settings</button>
@@ -79,7 +77,7 @@
         <section class="weekly-preview" aria-labelledby="weekly-title">
           <div class="section-title">
             <h2 id="weekly-title">What's cooking this week?</h2>
-            <button class="text-pill" data-action="demo-dashboard" type="button">View Meal Plan ›</button>
+            <button class="text-pill" data-action="demo-dashboard" type="button">View Chef Menu ›</button>
           </div>
           <div class="week-strip">
             <article><span>Mon</span><strong>Spaghetti Bolognese</strong><img src="https://images.unsplash.com/photo-1551892374-ecf8754cf8b0?auto=format&fit=crop&w=360&q=78" alt="Spaghetti Bolognese"></article>
@@ -95,7 +93,7 @@
         <section class="landing-actions" aria-label="FamilyBites shortcuts">
           <button data-action="demo-dashboard" type="button"><span>💬</span><strong>Family Chat</strong><small>Stay connected and share updates with your family.</small><i>›</i></button>
           <button data-action="demo-dashboard" type="button"><span>📅</span><strong>Weekly Recap</strong><small>See what's done, what's next, and celebrate together.</small><i>›</i></button>
-          <button data-action="demo-dashboard" type="button"><span>🛒</span><strong>Grocery List</strong><small>Everything you need, all in one place.</small><i>›</i></button>
+          <button data-action="demo-dashboard" type="button"><span>🧑‍🍳</span><strong>Chef Menu</strong><small>Pick food, build a cart, and send it to Chef.</small><i>›</i></button>
         </section>
       </div>
     </section>
@@ -164,7 +162,7 @@
             </div>
             <div class="quick-grid">
               <button data-page="snap">📷 <span>Snap Food</span></button>
-              <button data-page="order">🍽 <span>Order Food</span></button>
+              <button data-page="order">🧑‍🍳 <span>Chef Menu</span></button>
               <button data-page="favorites">❤️ <span>Favorite Restaurants</span></button>
               <button data-page="chat">💬 <span>Family Chat</span></button>
               <button data-page="weekly">📊 <span>Weekly AI Report</span></button>
@@ -218,14 +216,24 @@
           </div>
         </section>
 
-        <section id="page-order" class="page" data-title="Order Food" data-kicker="Dinner ready">
+        <section id="page-order" class="page" data-title="Chef Menu" data-kicker="Family ordering">
           <div class="section-title">
             <div>
-              <p class="eyebrow">Order Food</p>
-              <h3>Choose food and send it to Chef</h3>
+              <p class="eyebrow">Chef Menu</p>
+              <h3>Add foods to cart, then send to Chef</h3>
             </div>
           </div>
-          <div id="orderGrid" class="order-menu-grid"></div>
+          <div class="chef-menu-layout">
+            <div id="orderGrid" class="order-menu-grid"></div>
+            <aside class="chef-cart">
+              <div>
+                <p class="eyebrow">Cart</p>
+                <h3>Family order</h3>
+              </div>
+              <div id="cartList" class="cart-list"></div>
+              <button id="sendCartButton" class="primary-button" type="button">Done · Send to Chef</button>
+            </aside>
+          </div>
           <div class="voice-order-panel">
             <div>
               <p class="eyebrow">Voice Chat</p>
@@ -243,7 +251,7 @@
               <h3>Incoming food orders</h3>
               <p>Only the foods sent to Chef and family voice notes appear here.</p>
             </div>
-            <button class="secondary-button" data-page="order" type="button">Back to Order</button>
+            <button class="secondary-button" data-page="order" type="button">Back to Chef Menu</button>
           </div>
           <div class="chef-layout">
             <section>
